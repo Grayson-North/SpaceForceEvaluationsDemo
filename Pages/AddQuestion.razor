@@ -1,0 +1,39 @@
+﻿@page "/AddQuestion"
+@using NUnit.Framework
+@inject AuthenticationStateProvider authProvider
+@inject IUserData userData
+@inject IClimateQuestionsData climateQuestion
+@inject IDailyQuestionsData dailyQuestion
+@inject NavigationManager navManager
+@inherits LayoutComponentBase
+<PageTitle>Add Question</PageTitle>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<body>
+<AuthorizeView>
+    <Authorized>
+
+    </Authorized>
+    <NotAuthorized>
+    <!--Container to login if the user is not authorized-->
+        <div class="container">
+            <div class="col-2">
+                <input type="button" class="btn btn-primary" value="Login" onclick="location.href='MicrosoftIdentity/Account/SignIn'" />
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+</body>
+
+@code {
+    public string Id;
+    public int QuestionID;
+    public string text;
+    public string category;
+    public float questionWeight = 1;
+    public int questionPriority = 1;
+    private ClimateQuestionsModel newClimateQuestion = new ClimateQuestionsModel();
+    private DailyQuestionsModel newDailyQuestion = new DailyQuestionsModel();
+
+
+}

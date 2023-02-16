@@ -1,0 +1,98 @@
+﻿@page "/Account"
+@attribute [Authorize]
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider authProvider
+@inject NavigationManager navManager
+@inject IUserData userData
+<PageTitle>Account</PageTitle>
+
+
+<div class="mainDiv">
+
+    <h1>Please fill in the following information to complete your account registration process.</h1>
+
+    <!--Main form container-->
+    <div class="container">
+    <EditForm Model="@userModel" OnValidSubmit="@HandleSubmit">
+
+        <!--User Rank-->
+        <div class="formoption">
+            <label> Rank
+                <InputSelect @bind-Value="userModel.rank">
+                    <option value="">Select Rank...</option>
+                    <option value="Specialist One (Spc1/E-1)">Specialist One (Spc1/E-1)</option>
+                    <option value="Specialist Two (Spc2/E-2)">Specialist Two (Spc2/E-2)</option>
+                    <option value="Specialist Three (Spc3/E-3)">Specialist Three (Spc3/E-3)</option>
+                    <option value="Specialist Four (Spc4/E-4)">Specialist Four (Spc4/E-4)</option>
+                    <option value="Sergeant (Sgt/E-5)">Sergeant (Sgt/E-5)</option>
+                    <option value="Technical Sergeant (TSgt/E-6)">Technical Sergeant (TSgt/E-6)</option>
+                    <option value="Second Lieutenant (2d Lt/0-1)">Second Lieutenant (2d Lt/0-1)</option>
+                    <option value="First Lieutenant (1st LD/0-2)">First Lieutenant (1st LD/0-2)</option>
+                    <option value="Captain (Capt/0-3)">Captain (Capt/0-3)</option>
+                    <option value="Major (Maj/0-4)">Major (Maj/0-4)</option>
+                    <option value="Lieutenant Colonel (Lt Col/0-5)">Lieutenant Colonel (Lt Col/0-5)</option>
+                </InputSelect>
+            </label>
+        </div>
+
+        <!--User's Team ID-->
+        <div class="formoption">
+            <label>Team ID
+                <InputSelect @bind-Value="userModel.teamID">
+                    <option value="">Select Team...</option>
+                    <option value="Sales">Sales</option>
+                    <option value="Accounting">Accounting</option>
+                    <option value="Management">Management</option>
+                    <option value="Human Resources">Human Resources</option>
+                </InputSelect>
+            </label>
+        </div>
+
+        <!--User's Job Title-->
+        <div class="formoption">
+            <label> Job Title
+                <InputText @bind-Value="userModel.job"></InputText>
+            </label>
+        </div>
+        <div>
+            <button type="submit">Submit</button>
+        </div>
+
+
+    </EditForm>
+    </div>
+</div>
+
+
+
+
+@code
+{
+    public string teamNumber;
+    public string teamRank;
+    public string teamJob;
+
+    private UserModel userModel = new UserModel();
+
+    private async Task HandleSubmit()
+    {
+        teamNumber = userModel.teamID;
+        teamRank = userModel.rank;
+        teamJob = userModel.job;
+        await UpdateUser();
+        navManager.NavigateTo("/");
+    }
+
+    // Rank, TeamID, Job,
+    // This will also update an existing user
+    private async Task UpdateUser()
+    {
+        var user = await AuthenticationStateProviderHelpers.GetUserFromAuth(authProvider, userData);
+
+        user.rank = teamRank;
+        user.teamID = teamNumber;
+        user.job = teamJob;
+
+        await userData.UpdateUser(user); 
+    }
+}

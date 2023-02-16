@@ -1,0 +1,212 @@
+﻿@page "/"
+@using NUnit.Framework
+@inject AuthenticationStateProvider authProvider
+@inject IUserData userData
+@inject NavigationManager navManager
+@inherits LayoutComponentBase
+<PageTitle>Login</PageTitle>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!--Main Body-->
+<body>
+<AuthorizeView>
+    <Authorized>
+        <!--Container grid for the survey options-->
+        <div class="container grid">
+            <div>
+                <article class = "col-2 @(lastDaily ? "taken" : "notTaken")">
+                    <h2>Take <strong>Daily</strong> Survey</h2>
+                    <input type = "button" class = "btn btn-primary" value ="Begin" onclick="location.href='/Survey'" style="visibility:@showDailyButton"/>
+                </article>
+                @if (@lastDaily)
+                {
+                    <h4>Daily Survey is Completed</h4>
+                }
+            </div>
+
+            <div>
+                <article class = "col-2 @(lastWeekly ? "taken" : "notTaken")">
+                    <h2>Take <strong>Weekly</strong> Survey</h2>
+                    <input type = "button" class = "btn btn-primary" value ="Begin" onclick="location.href='/Weekly'" style="visibility:@showWeeklyButton"/>
+                </article>
+                @if (@lastWeekly)
+                {
+                    <h4>Weekly Survey is Completed</h4>
+                }
+
+            </div>
+
+            <div>
+                <article class = "col-2 @(lastMonthly ? "taken" : "notTaken")">
+                    <h2>Take <strong>Monthly</strong> Survey</h2>
+                    <input type = "button" class = "btn btn-primary" value ="Begin" onclick="location.href='/Monthly'" style="visibility:@showMonthlyButton"/>
+                </article>
+                @if (@lastMonthly)
+                {
+                    <h4>Monthly Survey is Completed</h4>
+                }
+            </div>
+        </div>
+
+        <!--Container for user information-->
+        <div class="container">
+@*            <h4>Logged in user is: @userName</h4>
+            <h4>Email: @emailAddress</h4>
+            <h4>Last Name: @userLastName</h4>
+            <h4>First Name: @userFirstName</h4>*@
+
+        
+
+
+            @if (@lastDaily || @lastWeekly || @lastMonthly)
+            {
+
+                <h3>Thank you, your response has been noted.</h3>
+                <div class="flex">
+                    <article class = "col-2">
+                        <input type = "button" class = "btn btn-primary" value ="Log Out" onclick="location.href='MicrosoftIdentity/Account/SignOut'"/>
+                    </article>
+                    
+                    <article class = "col-2">
+                        <input type = "button" class = "btn btn-primary" value ="Provide feedback on Teams" onclick="window.open('https://dod.teams.microsoft.us/l/team/19%3adod%3a2bf5dee9da7546c494c8d3b5f52f5878%40thread.tacv2/conversations?groupId=cebcc84c-7f65-4e78-9bf8-da0af1e01ded&tenantId=8331b18d-2d87-48ef-a35f-ac8818ebf9b4')"/>
+                    </article>
+
+                    <article class = "col-2">
+                        <input type = "button" class = "btn btn-primary" value ="Offer additional accolades" onclick="location.href='/Accolades'"/>
+                    </article>
+                </div>                    
+            }
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <!--Container to login if the user is not authorized-->
+        <div class="container">
+            <div class = "col-2">
+                <input type = "button" class = "btn btn-primary" value ="Login" onclick="location.href='MicrosoftIdentity/Account/SignIn'"/>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+</body>
+@code
+{
+        DateTime today;
+        DateTime lastSurvey;
+        DateTime lastSurveyWeekly;
+        DateTime lastSurveyMonthly;
+    public bool lastDaily = false;
+    public bool lastWeekly = false;
+    public bool lastMonthly = false;
+    public string showDailyButton = "";
+    public string showWeeklyButton = "";
+    public string showMonthlyButton = "";
+    public string userName;
+    public string userObjectID;
+    public string emailAddress;
+    public string userLastName;
+    public string userFirstName;
+
+    private UserModel loggedInUser = new UserModel();
+
+    // Function to check that the user is logged in, and get the information from their b2c profile
+    private async Task LoadAndVerifyUser()
+    {
+        var authState = await authProvider.GetAuthenticationStateAsync();
+        string objectID = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("objectidentifier"))?.Value;
+        string displayName = authState.User.Claims.FirstOrDefault(c => c.Type.Equals("name"))?.Value;
+        string email = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("email"))?.Value;
+        string lastName = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("surname"))?.Value;
+        string firstName = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("givenname"))?.Value;
+
+        // If the user is logged in, and they have an account
+        if(string.IsNullOrWhiteSpace(objectID) == false)
+        {
+
+            // set local variables to the logged in session so that they can be used
+            userObjectID = objectID;
+            userName = displayName;
+            emailAddress = email;
+            userLastName = lastName;
+            userFirstName = firstName;
+
+            loggedInUser.ObjectIdentifier = userObjectID;
+            loggedInUser.firstName = userFirstName;
+            loggedInUser.lastName = userLastName;
+            loggedInUser.email = emailAddress;
+            loggedInUser.userID = userObjectID;
+
+
+            var checkUser = await userData.GetUser(userObjectID);
+            if (checkUser == null)
+            {
+                await userData.CreateUser(loggedInUser);                  
+            }
+            else if (checkUser.teamID == null)
+            {
+                navManager.NavigateTo("/Account");
+            }
+        }
+
+        // Get who is logged in
+        UserModel currentUser = await AuthenticationStateProviderHelpers.GetUserFromAuth(authProvider, userData);
+        if (currentUser != null)
+        {
+            checkDailySurveyEligible(currentUser);
+            checkWeeklySurveyEligible(currentUser);
+            checkMonthlySurveyEligible(currentUser);
+        }
+
+    }
+
+    // Function to check if the user is eligible to take the daily survey
+    private void checkDailySurveyEligible(UserModel currentUser)
+    {
+        today = DateTime.Today;
+        lastSurvey = currentUser.dailyDate;
+        if ((today - lastSurvey).TotalDays > 0)
+        {
+            lastDaily = false;
+        }
+        else
+        {
+            lastDaily = true;
+            showDailyButton = "hidden";
+        }
+
+    }
+    private void checkWeeklySurveyEligible(UserModel currentUser)
+    {
+        lastSurveyWeekly = currentUser.weeklyDate;
+        if ((today - lastSurveyWeekly).TotalDays < 1000)
+        {
+            lastWeekly = false;
+        }
+        else
+        {
+            lastWeekly = true;
+            showWeeklyButton = "hidden";
+        }
+    }
+    private void checkMonthlySurveyEligible(UserModel currentUser)
+    {
+        // Set the total days back to 30 when feedback is finished being collected. 
+        lastSurveyMonthly = currentUser.monthlyDate;
+        if ((today - lastSurveyMonthly).TotalDays < 1000)
+        {
+            lastMonthly = false;
+        }
+        else
+        {
+            lastMonthly = true;
+            showMonthlyButton = "hidden";
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAndVerifyUser();
+    }
+
+
+    //--------------------------------------------------------------------------------------------------------//
+}

@@ -1,0 +1,95 @@
+﻿@page "/Landing"
+@attribute [Authorize]
+@inject AuthenticationStateProvider authProvider
+@inject IUserData userData
+@inject NavigationManager navManager
+
+
+<PageTitle>Landing</PageTitle>
+
+<div class="mainDiv">
+
+    <!--Title container-->
+    <div class="container">
+        <h1>Space Force Evaluations Project</h1>
+
+        <h3>Thank you, your response has been noted.</h3>
+
+    </div>
+
+    <!--Grid for additional options-->
+    <div class="container grid">
+        <article class = "col-2">
+            <input type = "button" class = "btn btn-primary" value ="Log Out" onclick="location.href='MicrosoftIdentity/Account/SignOut'"/>
+        </article>
+
+        <article class = "col-2">
+            <input type = "button" class = "btn btn-primary" value ="Provide feedback on Teams" onclick="window.open('https://dod.teams.microsoft.us/l/team/19%3adod%3a2bf5dee9da7546c494c8d3b5f52f5878%40thread.tacv2/conversations?groupId=cebcc84c-7f65-4e78-9bf8-da0af1e01ded&tenantId=8331b18d-2d87-48ef-a35f-ac8818ebf9b4')"/>
+        </article>
+    </div>
+
+        @*         <div class ="form-group row">
+                    <div class = "col-2">
+                        <input type = "button" class = "btn btn-primary" value ="Offer Accolade" onclick=""/>
+                    </div>
+                </div>*@
+</div>
+@code
+{
+    private UserModel loggedInUser;
+
+    private async Task LoadAndVerifyUser()
+    {
+        var authState = await authProvider.GetAuthenticationStateAsync();
+        string objectId = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("objectidentifier"))?.Value;
+
+        if (string.IsNullOrWhiteSpace(objectId) == false)
+        {
+            loggedInUser = await userData.GetUserFromAuthentication(objectId) ?? new();
+
+            string firstName = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("givenname"))?.Value;
+            string lastName = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("surname"))?.Value;
+            string displayName = authState.User.Claims.FirstOrDefault(c => c.Type.Equals("name"))?.Value;
+            string email = authState.User.Claims.FirstOrDefault(c => c.Type.Contains("email"))?.Value;
+
+            bool isDirty = false;
+            if (objectId.Equals(loggedInUser.ObjectIdentifier) == false)
+            {
+                isDirty = true;
+                loggedInUser.ObjectIdentifier = objectId;
+            }
+            if (firstName.Equals(loggedInUser.firstName) == false)
+            {
+                isDirty = true;
+                loggedInUser.firstName = firstName;
+            }
+            if (lastName.Equals(loggedInUser.lastName) == false)
+            {
+                isDirty = true;
+                loggedInUser.lastName = lastName;
+            }
+            if (email.Equals(loggedInUser.email) == false)
+            {
+                isDirty = true;
+                loggedInUser.email = email;
+            }
+            if (isDirty)
+            {
+                if (string.IsNullOrWhiteSpace(loggedInUser.Id))
+                {
+                    await userData.CreateUser(loggedInUser);
+                }
+                else
+                {
+                    await userData.UpdateUser(loggedInUser);
+                }
+            }
+        }
+    }
+
+    protected async Task OnIntializedAsync()
+    {
+        await LoadAndVerifyUser();
+    }
+
+}

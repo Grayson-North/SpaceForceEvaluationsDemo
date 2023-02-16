@@ -1,0 +1,68 @@
+﻿@inject IClimateQuestionsData questionData
+@inject IDailyQuestionsData dailyQuestionData
+@inject IUserData userData
+@inject ISurveyData surveyData
+@inject NavigationManager navManager
+@inject AuthenticationStateProvider authProvider
+
+<div class="maincomponent" style="visibility: @showQuestion">
+    <p>Please answer the following question to the best of your ability</p>
+    <h5>@questionInput</h5>
+
+    <EditForm Model="@surveyModel" OnValidSubmit="@HandleSubmit">
+        <InputText @bind-Value="@questionResponse" style="width: 25%" rows="2"></InputText>
+        <div>
+            <button type="submit">Submit</button>
+        </div>
+    </EditForm>
+
+</div>
+@code {
+    [Parameter]
+    public string questionInput { get; set; }
+
+    public int questionNumber;
+    public string questionResponse;
+    public string questionCategory;
+    public string surveyTaker;
+    public string surveySubject;
+    public string takerName;
+    DateTime surveyDate;
+    private SurveyModel surveyModel = new SurveyModel();
+    public string showQuestion = "";
+
+    private async Task HandleSubmit()
+    {
+        // need to store the response as a string, and push it to the database
+        surveyModel.freeResponseText = questionResponse;
+        surveyModel.question = questionInput;
+        surveyModel.surveyID = questionNumber;
+        surveyModel.category = questionCategory;
+        surveyModel.takerID = surveyTaker;
+        surveyModel.subjectID = surveySubject;
+        surveyModel.name = takerName;
+        surveyDate = DateTime.Today;
+        await surveyData.CreateSurvey(surveyModel);
+        await ShowDiv();
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await AuthenticationStateProviderHelpers.GetUserFromAuth(authProvider, userData);
+        surveyTaker = user.userID;
+        takerName = user.firstName + " " + user.lastName;
+    }
+
+    private async Task ShowDiv()
+    {
+        if (showQuestion=="")
+        {
+            showQuestion = "hidden";
+        }
+        else
+        {
+          showQuestion = "";          
+        }
+    }
+}

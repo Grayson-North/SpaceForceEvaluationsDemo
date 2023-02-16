@@ -1,0 +1,116 @@
+﻿@inject ISurveyData surveyData
+@inject NavigationManager navManager
+
+<EditForm Model = "@surveyModel" OnValidSubmit="@HandleSubmit">
+    <InputDate @bind-Value="fromDate" />
+    <InputDate @bind-Value="toDate"></InputDate>
+</EditForm>
+
+<div class="mainDiv">
+    <div class="container">
+        <h3 class="p-3 text-center">Reports List: </h3>
+        <div class="scroll">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>QuestionID</th>
+                        <th>Question Text</th>
+                        <th>Response</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var SurveyModel in surveyQuestion)
+                    {
+                        @if (@SurveyModel.date > @fromDate && @SurveyModel.date < @toDate)
+                        {
+                            @if(@SurveyModel.question != null)
+                            {
+                            addQuestions(@SurveyModel.response);
+                            @if (@SurveyModel.response == 1)
+                            {
+                                incrementOne();
+                            }
+                            @if (@SurveyModel.response == 2)
+                            {
+                                incrementTwo();
+                            }
+                            @if (@SurveyModel.response == 3)
+                            {
+                                incrementThree();
+                            }
+                            @if (@SurveyModel.response == 4)
+                            {
+                                incrementFour();
+                            }
+                            @if (@SurveyModel.response == 5)
+                            {
+                                incrementFive();
+                            }
+                             <tr>
+                                <td>@SurveyModel.surveyID</td>
+                                <td>@SurveyModel.question</td>
+                                <td>@SurveyModel.response</td>
+                            </tr>                                
+                            }                         
+                        }
+                    }
+                </tbody>
+            </table>
+            <PieChartHolder firstNum="firstNum" secondNum="secondNum" thirdNum="thirdNum" fourthNum="fourthNum" fifthNum="fifthNum"></PieChartHolder>   
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public List<SurveyModel> surveyQuestion{ get; set; }
+    private SurveyModel surveyModel = new SurveyModel();
+    DateTime fromDate = DateTime.Now;
+    DateTime toDate = DateTime.Now;
+
+    public string firstString, secondString = "";
+    public int firstNum, secondNum, thirdNum, fourthNum, fifthNum = 0;
+    private int totalQuestions;
+    private int totalResponse;
+    private double average;
+    
+    // Functions to store the responses for questions
+    private void incrementOne()
+    {
+        firstNum++;
+    }
+    private void incrementTwo()
+    {
+        secondNum++;
+    }
+    private void incrementThree()
+    {
+        thirdNum++;
+    }
+    private void incrementFour()
+    {
+        fourthNum++;
+    }
+    private void incrementFive()
+    {
+        fifthNum++  ;
+    }
+    private void addQuestions(int response)
+    {
+        totalQuestions++;
+        totalResponse += response;
+    }
+    private double getAverage(int totalResponse, int totalQuestions)
+    {
+        if (totalResponse != 0 && totalQuestions != 0)
+        {
+            average = (double)totalResponse / (double)totalQuestions;            
+        }
+        return average;
+    }
+    private void HandleSubmit()
+    {
+        
+    }
+
+}

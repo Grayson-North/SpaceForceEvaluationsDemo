@@ -1,0 +1,20 @@
+﻿@inject NavigationManager navManager
+
+<div class="mainDiv"> 
+    <h1>Authorization Required</h1>
+    <p>
+        You are not authorized to access this section. You need to be logged in
+        to view this page.
+    </p>
+    <div>
+        <button @onclick="ClosePage">Return</button>
+    </div>
+</div>
+
+@code {
+    private void ClosePage()
+    {
+        navManager.NavigateTo("/");
+    }
+
+}

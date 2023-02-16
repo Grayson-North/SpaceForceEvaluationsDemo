@@ -1,0 +1,85 @@
+﻿/* Main page */
+.mainDiv {
+    background-image: linear-gradient(180deg, #002035 0%, #000f 99%);
+    color: white;
+    height: 100vh;
+    text-align: center;
+    display: flex;
+    justify-content: space-around;
+}
+
+/* Basic CSS */
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+a {
+    text-decoration: none;
+}
+
+ul {
+    list-style: none;
+}
+
+img {
+    display: inline;
+    max-width: 2vw;
+}
+img:hover + .hide{
+    display: block;
+    color: white;
+}
+.hide{
+    display: none;
+}
+/* Container for page contents */
+.container  {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    justify-items: center;
+    text-align: center;
+}
+
+.formoption {
+    width: 0;
+}
+
+.btn-primary {
+    min-width: 80px;
+    font-size: 16px;
+    position: center;
+    padding: 0.5px;
+}
+
+table {
+    color: white;
+}
+
+.scroll {
+    height: 75vh;
+    overflow-y: auto;
+}
+
+/* Default grid CSS */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.grid-col-span-2 {
+    grid-column: span 2;
+}
+
+/* Mobile devices */
+@media(max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .grid-col-span-2 {
+        grid-column: span 1;
+    }
+}
